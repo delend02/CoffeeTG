@@ -17,6 +17,7 @@ namespace CoffeeTG.Telegram.Html
         public async static void Run(HttpClient httpClient, TelegramBotClient botClient)
         {
             Settings settings = new();
+
             while (true)
             {
                 if ((23 == DateTime.Now.Hour) &&
@@ -36,49 +37,9 @@ namespace CoffeeTG.Telegram.Html
 
                     var result = await ParseSalesAnalysis(httpClient, @"https://online.unicum.ru/n/sgraph.html?V0300009BE20200002760");
                     await botClient.SendTextMessageAsync(-1001396271437, result);
+                    await Task.Delay(600000);
                 }
-                await Task.Delay(60000);
             }
-        }
-
-        public static async Task<string> ParseEvents(HttpClient httpClient, string url)
-        {
-            try
-            {
-                var response = await httpClient.GetAsync(url);
-                string html = null;
-
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    html = await response.Content.ReadAsStringAsync();
-
-                    if (!string.IsNullOrEmpty(html))
-                    {
-                        HtmlDocument doc = new();
-                        doc.LoadHtml(html);
-
-                        var events = doc.DocumentNode.SelectNodes("/html/body/table[3]/tr");
-
-                        if (events != null && events.Count > 0)
-                        {
-                            foreach (var item in events)
-                            {
-                                var date = item.SelectSingleNode("/td/font");
-                                Console.WriteLine(date.InnerText);
-                            }
-                        }
-                        else
-                            return "Нет данных, произошла ошибка парсинга.";
-                    }
-                }
-                else
-                    return $"Ошибка подлючения бота к сайту. Статус ошибки: {response.StatusCode}";
-
-            }
-            catch (Exception)
-            { }
-
-            return null;
         }
 
         public static async Task<string> ParseSalesAnalysis(HttpClient httpClient, string url)
@@ -122,7 +83,7 @@ namespace CoffeeTG.Telegram.Html
                         var total = doc.DocumentNode.SelectSingleNode("/html/body/table/tr[12]/td[9]");
 
                         return $"❗️Ежедневный отчет на {DateTime.Now}❗️\n" +
-                               $"=============================================\n" +
+                               $"=============================\n" +
                                $"☕Кофе эспрессо: {espresso.InnerText.Replace("&nbsp;", "")}\n" +
                                $"☕Двойной эспрессо: {doubleEspresso.InnerText.Replace("&nbsp;", "")}\n" +
                                $"☕Кофе американо: {americano.InnerText.Replace("&nbsp;", "")}\n" +
@@ -133,7 +94,7 @@ namespace CoffeeTG.Telegram.Html
                                $"☕Кофе с молоком: {coffeeWithMilk.InnerText.Replace("&nbsp;", "")}\n" +
                                $"☕Латте макиато: {latte.InnerText.Replace("&nbsp;", "")}\n" +
                                $"☕Ванильный капучино: {vanillaCappuccino.InnerText.Replace("&nbsp;", "")}\n" +
-                               $"=============================================\n"+
+                               $"=============================\n" +
                                $"Итого: {total.InnerText.Replace("&nbsp;", "")}";
                     }
                     else
